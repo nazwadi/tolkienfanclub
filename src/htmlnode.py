@@ -1,4 +1,4 @@
-class HTMLNode():
+class HTMLNode:
     
     def __init__(self, 
                  tag: str = None, 
