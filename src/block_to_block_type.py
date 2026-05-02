@@ -1,6 +1,5 @@
 from enum import Enum
 
-from markdown_blocks import markdown_to_blocks
 import re
 
 
