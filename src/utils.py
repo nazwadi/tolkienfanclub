@@ -64,8 +64,33 @@ def generate_page(from_path, template_path, dest_path):
         if exc.errno == errno.EEXIST and os.path.isdir(dest_path):
             pass
         else: raise
-    with open(dest_path, "w", encoding="utf-8") as f:
+    with open(dest_path.replace(".md", ".html"), "w", encoding="utf-8") as f:
         f.write(template)
+
+def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
+    if not os.path.exists(dest_dir_path):
+        logging.log(logging.INFO, f"Creating directory '{dest_dir_path}'")
+        os.mkdir(dest_dir_path)
+    source_full_path = os.path.abspath(dir_path_content)
+    destination_full_path = os.path.abspath(dest_dir_path)
+    logging.log(logging.INFO, f"Copying source path: {source_full_path} to destination path: {destination_full_path}")
+    entries = os.listdir(dir_path_content)
+    for entry in entries:
+        source_filename = os.path.abspath(os.path.join(str(source_full_path), entry))
+        destination_filename = os.path.abspath(os.path.join(str(destination_full_path), entry))
+        logging.log(logging.INFO, f"* Entry is: '{source_filename}'")
+        if os.path.isfile(os.path.join(dir_path_content, entry)):
+            logging.log(logging.INFO, f"* Determined that '{source_filename}' is a file.")
+            if entry.endswith(".md"):
+                logging.log(logging.INFO, f"* Determined that '{source_filename}' is a markdown file.")
+                generate_page(source_filename, template_path, destination_filename)
+#                shutil.copy(source_filename, destination_filename)
+                logging.log(logging.INFO, f"* Copying {source_filename} to {destination_filename}")
+        elif os.path.isdir(os.path.join(dir_path_content, entry)):
+            logging.log(logging.INFO, f"* Determined that '{source_filename}' is a directory. Creating it at {destination_filename}.")
+            os.mkdir(destination_filename)
+            logging.log(logging.INFO, f"* Recursively calling recursive_copy(source_dir={source_filename}, destination_dir={destination_filename})")
+            generate_pages_recursive(source_filename, template_path, destination_filename)
 
 if __name__ == "__main__":
     generate_public("./static/", "./public/")
