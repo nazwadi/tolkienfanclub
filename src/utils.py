@@ -47,7 +47,7 @@ def extract_title(markdown: str):
             return line[1:].strip()
     raise Exception("No title found in markdown")
 
-def generate_page(from_path, template_path, dest_path):
+def generate_page(basepath, from_path, template_path, dest_path):
     print(f"Generating a page from {from_path} to {dest_path} using {template_path}.")
     with open(from_path, "r", encoding="utf-8") as f:
         markdown = f.read()
@@ -58,6 +58,8 @@ def generate_page(from_path, template_path, dest_path):
     title = extract_title(markdown)
     template = template.replace("{{ Title }}", title)
     template = template.replace("{{ Content }}", html_string)
+    template = template.replace('href="/', f'href="{basepath}')
+    template = template.replace('src="/', f'src="{basepath}')
     try:
         os.makedirs(os.path.dirname(dest_path), exist_ok=True)
     except OSError as exc:
@@ -67,7 +69,7 @@ def generate_page(from_path, template_path, dest_path):
     with open(dest_path.replace(".md", ".html"), "w", encoding="utf-8") as f:
         f.write(template)
 
-def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
+def generate_pages_recursive(basepath, dir_path_content, template_path, dest_dir_path):
     if not os.path.exists(dest_dir_path):
         logging.log(logging.INFO, f"Creating directory '{dest_dir_path}'")
         os.mkdir(dest_dir_path)
@@ -83,14 +85,14 @@ def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
             logging.log(logging.INFO, f"* Determined that '{source_filename}' is a file.")
             if entry.endswith(".md"):
                 logging.log(logging.INFO, f"* Determined that '{source_filename}' is a markdown file.")
-                generate_page(source_filename, template_path, destination_filename)
+                generate_page(basepath, source_filename, template_path, destination_filename)
 #                shutil.copy(source_filename, destination_filename)
                 logging.log(logging.INFO, f"* Copying {source_filename} to {destination_filename}")
         elif os.path.isdir(os.path.join(dir_path_content, entry)):
             logging.log(logging.INFO, f"* Determined that '{source_filename}' is a directory. Creating it at {destination_filename}.")
             os.mkdir(destination_filename)
             logging.log(logging.INFO, f"* Recursively calling recursive_copy(source_dir={source_filename}, destination_dir={destination_filename})")
-            generate_pages_recursive(source_filename, template_path, destination_filename)
+            generate_pages_recursive(basepath, source_filename, template_path, destination_filename)
 
 if __name__ == "__main__":
     generate_public("./static/", "./public/")
